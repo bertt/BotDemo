@@ -6,6 +6,7 @@ using System.Web.Http;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Builder.Dialogs;
 using BotDemo;
+using System.Linq;
 
 namespace Bot_Application1
 {
@@ -21,10 +22,24 @@ namespace Bot_Application1
                 await Conversation.SendAsync(activity, () => new IntakeReportDialog());
             else
             {
+
                 if (activity?.Type == ActivityTypes.ConversationUpdate)
                 {
-                    Activity reply = activity.CreateReply("Welcom at the Spoorweb chat bot.Type something to start the intake.");
-                    await connector.Conversations.ReplyToActivityAsync(reply);
+                    if (activity.MembersAdded != null && activity.MembersAdded.Any())
+                    {
+                        foreach (var newMember in activity.MembersAdded)
+                        {
+                            if (newMember.Id != activity.Recipient.Id)
+                            {
+                                Activity reply = activity.CreateReply("Welcome at the Spoorweb chat bot.Type something to start the intake.");
+                                var attachment = new Attachment();
+                                attachment.ContentType = "image/png";
+                                attachment.ContentUrl = "http://slideplayer.nl/46/11688212/big_thumb.jpg";
+                                reply.Attachments.Add(attachment);
+                                await connector.Conversations.ReplyToActivityAsync(reply);
+                            }
+                        }
+                    }
                 }
             }
 

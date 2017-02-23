@@ -25,19 +25,18 @@ namespace BotDemo
         {
             IMessageActivity activity = await argument;
             await context.PostAsync(activity.Text);
-
             PromptDialog.Choice(
                 context: context,
                 resume: ResumeAndPromptLocationAsync,
                 options: Enum.GetValues(typeof(IncidentTypes)).Cast<IncidentTypes>().ToArray(),
                 prompt: "1. Please select the incidenttype",
-                retry: "I didn't understand. Please try again.");
+                retry: "I didn't understand. Please try again."
+                );
         }
 
         public async Task ResumeAndPromptLocationAsync(IDialogContext context, IAwaitable<IncidentTypes> argument)
         {
             incidentTypes = await argument;
-
             PromptDialog.Text(
                 context: context,
                 resume: ResumeAndPromptAttachmentNeeded,
@@ -57,6 +56,7 @@ namespace BotDemo
 
         public async Task ResumeAndHandleAttachmentNeededAsync(IDialogContext context, IAwaitable<bool> argument)
         {
+
             attachmentNeeded = await argument;
 
             if (attachmentNeeded)
