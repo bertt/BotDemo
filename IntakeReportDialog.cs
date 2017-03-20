@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace BotDemo
 {
@@ -36,17 +35,41 @@ namespace BotDemo
 
         public async Task ResumeAndPromptLocationAsync(IDialogContext context, IAwaitable<IncidentTypes> argument)
         {
-            incidentTypes = await argument;
+            if (argument != null)
+            {
+                incidentTypes = await argument;
+            }
             PromptDialog.Text(
                 context: context,
-                resume: ResumeAndPromptAttachmentNeeded,
-                prompt: "2. Describe location:",
-                retry: "I didn't understand. Please try again.");
+                resume: ResumeAndHandleDrp,
+                prompt: "2. Give me dienstregelpunt afkorting (bv 'Ut'):",
+                retry: "I didn't understand. Please try again."
+
+                );
         }
 
-        public async Task ResumeAndPromptAttachmentNeeded(IDialogContext context, IAwaitable<string> argument)
+        public async Task ResumeAndHandleDrp(IDialogContext context, IAwaitable<string> argument)
         {
-            location = await argument;
+            var drp = await argument;
+            var upper = char.ToUpper(drp[0]) + drp.Substring(1);
+            var root = ProrailServices.GetDrp(upper);
+            if (root.features.Count() > 0)
+            {
+                await context.PostAsync($"Dientregelpunt gevonden :-) " + root.features[0].attributes.NAAM);
+                location = root.features[0].attributes.NAAM;
+            }
+            else
+            {
+                location = "";
+                await context.PostAsync($"Dienstregelpunt niet gevonden :-( Probeer het nog eens...");
+                // context.Wait(ResumeAndPromptLocationAsync(context);
+            }
+            await ResumeAndPromptAttachmentNeeded(context);
+        }
+
+        public async Task ResumeAndPromptAttachmentNeeded(IDialogContext context)
+        {
+            // location = await argument;
             PromptDialog.Confirm(
                 context: context,
                 resume: ResumeAndHandleAttachmentNeededAsync,
@@ -66,7 +89,6 @@ namespace BotDemo
                     resume: ResumeAndHandleAttachmentAsync,
                     prompt: $"3a Please add attachment",
                     retry: "I didn't understand. Please try again.");
-
             }
             else
             {
